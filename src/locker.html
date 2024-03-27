@@ -6,9 +6,19 @@
   <title>Frog Locker</title>
   
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <style>
+    .back-btn {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 10;
+    }
+  </style>
 </head>
 <body class="bg-white">
-    <a href="home.html"><button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Go Back</button></a>
+  <button id="backBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md back-btn">Go Back</button>
+  
   <div class="container mx-auto py-8">
     <h1 class="text-3xl font-bold text-blue-500 mb-8">Frog Locker</h1>
    
@@ -19,12 +29,19 @@
         <img src="./img/frog1.jpg" alt="Frog 1" class="w-full h-30 object-cover mb-2 rounded-lg">
         <p class="text-sm">A simple frog that unlocks at level 1</p>
         
-        <button onclick="buyFrog('frog1')" id="buyBtn1" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-full mt-4 hover:bg-blue-600">Buy for 10 XP</button>
-        <p id="possession1" class="text-green-500 font-semibold hidden">In possession</p>
-        <button class="heart ml-2 text-2xl" onclick="toggleHeart('frog1')" id="heartBtn1">&hearts;</button>
+        <button id="buyBtn1" class="buy-btn bg-blue-500 text-white font-semibold py-2 px-4 rounded-full mt-4 hover:bg-blue-600">Buy for 1 XP</button>
+        <p id="possession1" class="text-green-500 font-semibold hidden">In possession: <span id="count1">0</span></p>
+      </div>
+
+      <div class="bg-white rounded-lg p-4 shadow-md" id="frog2">
+        <h2 class="text-lg font-semibold mb-2">Frog 2</h2>
+        <img src="./img/frog1.jpg" alt="Frog 2" class="w-full h-30 object-cover mb-2 rounded-lg">
+        <p class="text-sm">Another frog that unlocks at level 1</p>
+        
+        <button id="buyBtn2" class="buy-btn bg-blue-500 text-white font-semibold py-2 px-4 rounded-full mt-4 hover:bg-blue-600">Buy for 2 XP</button>
+        <p id="possession2" class="text-green-500 font-semibold hidden">In possession: <span id="count2">0</span></p>
       </div>
       
-
     </div>
   </div>
 
@@ -33,91 +50,73 @@
   </div>
 
   <script>
-  
-    let frogPossession = JSON.parse(localStorage.getItem('frogPossession')) || {};
-    let heartStates = JSON.parse(localStorage.getItem('heartStates')) || {};
+    $(document).ready(function(){
+      let frogPossession = JSON.parse(localStorage.getItem('frogPossession')) || {};
+      let frogCount = {
+        '1': 0,
+        '2': 0
+      };
 
-    // Function to handle buying frogs
-    function buyFrog(frogId) {
-      const xpCost = 10; // XP cost for buying a frog
-      let currentXP = localStorage.getItem('xp') || 0;
-      
-     
-      if (currentXP >= xpCost) {
-        // Deduct XP
-        currentXP -= xpCost;
-        localStorage.setItem('xp', currentXP);
+      // Function to handle buying frogs
+      function buyFrog(frogId, cost) {
+        let currentXP = parseInt(localStorage.getItem('xp')) || 0;
+        
+        if (currentXP >= cost) {
+          // Deduct XP
+          currentXP -= cost;
+          localStorage.setItem('xp', currentXP);
 
-        // Add frog to possession
-        frogPossession[frogId] = true;
-        localStorage.setItem('frogPossession', JSON.stringify(frogPossession));
+          // Increment frog count
+          frogCount[frogId]++;
+          frogPossession[frogId] = frogCount[frogId];
 
-        // Update display
-        updateXPDisplay();
-        updateFrogPossessionDisplay();
+          // Add frog to possession
+          localStorage.setItem('frogPossession', JSON.stringify(frogPossession));
 
-       
-        document.getElementById(`buyBtn1`).style.display = 'none';
-        document.getElementById(`possession1`).style.display = 'block';
-      } else {
-        alert("You don't have enough XP to buy this frog!");
-      }
-    }
+          // Update display
+          updateXPDisplay();
+          updateFrogPossessionDisplay(frogId);
 
-   
-    function updateXPDisplay() {
-      const xpDisplay = document.getElementById('xpDisplay');
-      if (xpDisplay) {
-        xpDisplay.textContent = localStorage.getItem('xp') || 0;
-      }
-    }
-
-   
-    function updateFrogPossessionDisplay() {
-      const frogPossessionContainer = document.getElementById('frogPossession');
-      if (frogPossessionContainer) {
-        frogPossessionContainer.innerHTML = ''; 
-
-  
-        for (const frogId in frogPossession) {
-          const frogCard = document.createElement('div');
-          frogCard.classList.add('bg-white', 'rounded-lg', 'p-4', 'shadow-md', 'mb-4');
-
-          const frogName = document.createElement('h2');
-          frogName.classList.add('text-lg', 'font-semibold', 'mb-2');
-          frogName.textContent = `Frog ${frogId}`;
-
-          
-
-          frogCard.appendChild(frogName);
-          frogPossessionContainer.appendChild(frogCard);
+          // Hide buy button
+          $(`#buyBtn${frogId}`).hide();
+        } else {
+          alert("You don't have enough XP to buy this frog!");
         }
       }
-    }
 
-    // Function to toggle heart color
-    function toggleHeart(frogId) {
-      const heart = document.querySelector(`#${frogId} .heart`);
-      if (heart) {
-        heart.classList.toggle('text-red-500');
-
-        // Save heart state in local storage
-        heartStates[frogId] = heart.classList.contains('text-red-500') ? 'red' : 'black';
-        localStorage.setItem('heartStates', JSON.stringify(heartStates));
+      // Function to update XP display
+      function updateXPDisplay() {
+        const xpDisplay = $('#xpDisplay');
+        if (xpDisplay) {
+          xpDisplay.text(localStorage.getItem('xp') || 0);
+        }
       }
-    }
 
-    // Call functions to initialize display
-    updateXPDisplay();
-    updateFrogPossessionDisplay();
-
-    // Restore heart states from local storage
-    for (const frogId in heartStates) {
-      const heart = document.getElementById(`heartBtn${frogId}`);
-      if (heart && heartStates[frogId] === 'red') {
-        heart.classList.add('text-red-500');
+      // Function to update frog possession display
+      function updateFrogPossessionDisplay(frogId) {
+        if (frogPossession[frogId]) {
+          $(`#possession${frogId}`).show();
+          $(`#count${frogId}`).text(frogPossession[frogId]);
+        }
       }
-    }
+
+      // Function to go back to the previous page
+      $('#backBtn').click(function() {
+        window.history.back();
+      });
+
+      // Event listener for buy buttons
+      $('.buy-btn').click(function() {
+        const frogId = $(this).attr('id').replace('buyBtn', '');
+        const cost = frogId === '1' ? 1 : 2;
+        buyFrog(frogId, cost);
+      });
+
+      // Call functions to initialize display
+      updateXPDisplay();
+      updateFrogPossessionDisplay('1');
+      updateFrogPossessionDisplay('2');
+    });
   </script>
 </body>
 </html>
