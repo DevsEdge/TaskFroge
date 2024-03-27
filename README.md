@@ -5,7 +5,7 @@ Seamlessly manage your tasks and boost productivity with our intuitive Pomodoro 
 
 ## Screenshots
 
-![App Screenshot](imge2024.png)
+![App Screenshot](image2024.png)
 
 
 ## Installation
